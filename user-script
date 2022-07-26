@@ -89,17 +89,6 @@ home=$(getent passwd "$user" | cut -d: -f6)
 [[ -n $home && -d $home ]] ||
 	fatal "failed to find user $user home directory"
 
-# figure out what script to run
-SUSPEND="${XDG_CONFIG_HOME:-$HOME/.config}/zzz/onsuspend}"
-RESUME="${XDG_CONFIG_HOME:-$HOME/.config}/zzz/onresume"
-case "$mode" in
-suspend) script=$SUSPEND ;;
-resume) script=$RESUME ;;
-'') fatal 'mode must be specified as the first argument' ;;
-*) fatal "invalid mode specified: '$mode'" ;;
-esac
-[[ -x $script ]] || fatal "script $script not found or not executable"
-
 # create the environment
 env=(
 	"HOME=$home"
@@ -113,6 +102,18 @@ else
 		fatal "failed to find Xauthority file for user $user"
 	env+=("DISPLAY=:$display" "XAUTHORITY=$xauthority")
 fi
+
+# figure out what script to run
+XDG_CONFIG_HOME="$home/.config"
+SUSPEND="${XDG_CONFIG_HOME:-$home/.config}/zzz/onsuspend"
+RESUME="${XDG_CONFIG_HOME:-$home/.config}/zzz/onresume"
+case "$mode" in
+suspend) script=$SUSPEND ;;
+resume) script=$RESUME ;;
+'') fatal 'mode must be specified as the first argument' ;;
+*) fatal "invalid mode specified: '$mode'" ;;
+esac
+[[ -x $script ]] || fatal "script $script not found or not executable"
 
 # go to the home directory
 cd "$home" || fatal "failed to cd into home directory: $home"
